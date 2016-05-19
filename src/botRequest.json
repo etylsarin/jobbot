@@ -1,0 +1,64 @@
+{
+  "type": "Message",
+  "id": "f749827ac96f46de9090425dad0df08e",
+  "conversationId": "8a684db8",
+  "created": "2016-05-19T14:49:27.2328702Z",
+  "language": "en-US",
+  "attachments": [],
+  "from": {
+    "name": "User1",
+    "channelId": "emulator",
+    "address": "User1",
+    "id": "2c1c7fa3",
+    "isBot": false
+  },
+  "to": {
+    "name": "YourAppId",
+    "channelId": "emulator",
+    "address": "YourAppId",
+    "id": "YourAppId",
+    "isBot": true
+  },
+  "participants": [
+    {
+      "name": "User1",
+      "channelId": "emulator",
+      "address": "User1",
+      "id": "2c1c7fa3",
+      "isBot": false
+    },
+    {
+      "name": "YourAppId",
+      "channelId": "emulator",
+      "address": "YourAppId",
+      "id": "YourAppId",
+      "isBot": true
+    }
+  ],
+  "totalParticipants": 2,
+  "mentions": [],
+  "channelMessageId": "38f56b4ed5c24de68a92263357cc5a50",
+  "channelConversationId": "Conv1",
+  "botUserData": {
+    "mydebug": "aaaa"
+  },
+  "botConversationData": {
+    "BotBuilder.Data.SessionId": "5002b6a0-1db5-11e6-938d-c775a69ce312"
+  },
+  "botPerUserInConversationData": {
+    "BotBuilder.Data.SessionState": {
+      "callstack": [
+        {
+          "id": "/",
+          "state": {
+            "BotBuilder.Data.Group": "BotBuilder.Id.DefaultGroup",
+            "BotBuilder.Data.Intent": "JobView",
+            "BotBuilder.Data.WaterfallStep": 1
+          }
+        }
+      ],
+      "lastAccess": 1463668562489
+    }
+  },
+  "hashtags": []
+}
