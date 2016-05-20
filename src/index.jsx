@@ -101,7 +101,6 @@ var Chat = React.createClass({
             console.log(event.error)
         })
         .on('interimResult', function (msg) {
-            console.log('interimResult', msg);
             document.getElementById("chatInput").value = msg;
         })
         .on('finalResult', function (msg) {
@@ -122,8 +121,7 @@ var Chat = React.createClass({
 
   submit: function(ev) {
     var self = this,
-      xhr = createCORSRequest('POST', 'http://uxwiki.monster.com:3978/api/message', this.state.text);
-      //xhr = createCORSRequest('GET', './example.json', this.state.text);
+      xhr = createCORSRequest('POST', 'http://uxwiki.monster.com:3978/api/messages', this.state.text);
 
     ev.preventDefault();
     this.newMessage(this.state.text, {
@@ -133,27 +131,25 @@ var Chat = React.createClass({
     xhr.onreadystatechange = function () {
       var response;
       if (xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 400) {
-        window.setTimeout(function() {
-          response = JSON.parse(xhr.responseText);
-          self.newMessage(response.text, {
-            name: 'Job Bot',
-            avatar: 'bot.jpg'
-          });
-          self.setState({
-            //iframeUrl: msgObj.url || self.state.iframeUrl
-          });
-          talk(response.text, 'Google UK English Male');
-        }, 500);
+        response = JSON.parse(xhr.responseText);
+        self.newMessage(response.text, {
+          name: 'Job Bot',
+          avatar: 'bot.jpg'
+        });
+        self.setState({
+          //iframeUrl: msgObj.url || self.state.iframeUrl
+        });
+        talk(response.text, 'Google UK English Male');
       }
     };
     botRequestJSON.text = this.state.text;
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.setRequestHeader("Authorization", "Basic TW9uc3RlckpvYlNlYXJjaEJvdDp4eGE=");
     xhr.send(JSON.stringify(botRequestJSON));
     document.getElementById("chatInput").value = '';
   },
 
   updateInput: function(ev) {
-    console.log('updateInput', ev.target.value);
     this.setState({
       text: ev.target.value
     });
