@@ -1,20 +1,22 @@
 require('../node_modules/bootstrap/dist/css/bootstrap.min.css');
 require('./css/chat.css');
-var botRequestJSON = require("json!./botRequest.json");
-var talk = require('speech-synthesis');
 
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+var botRequestJSON = require("json!./botRequest.json");
+var talk = require('speech-synthesis');
+var Speech = require('speechjs');
+
 function parseUrl(text = '') {
   var urlRegex = /(https?:\/\/[^\s]+)/g,
-    urlArray = [],
-    matchArray;
+  urlArray = [],
+  matchArray;
 
   // Iterate through any URLs in the text.
   while( (matchArray = urlRegex.exec( text )) !== null ) {
-      var token = matchArray[0];
-      urlArray.push(token);
+    var token = matchArray[0];
+    urlArray.push(token);
   }
   return {
     text: text.replace(urlRegex, ''),
@@ -44,25 +46,24 @@ function createCORSRequest(method, url) {
     xhr = null;
 
   }
-  console.log('XHR', xhr, "withCredentials" in xhr);
   return xhr;
 }
 
 var ChatMessage = React.createClass({
   render: function() {
     return <li className="media">
-        <div className="media-body">
-            <div className="media">
-                <div className="pull-left" href="#">
-                    <img className="media-object img-circle" src={this.props.avatar} />
-                </div>
-                <div className="media-body">
-                    <p>{this.props.message}</p>
-                    <footer className="small text-muted">{this.props.name} | {this.props.date}</footer>
-                </div>
-            </div>
+      <div className="media-body">
+        <div className="media">
+          <div className="pull-left" href="#">
+            <img className="media-object img-circle" src={this.props.avatar} />
+          </div>
+          <div className="media-body">
+            <p>{this.props.message}</p>
+            <footer className="small text-muted">{this.props.name} | {this.props.date}</footer>
+          </div>
         </div>
-        <hr />
+      </div>
+      <hr />
     </li>;
   }
 });
@@ -79,15 +80,50 @@ var Chat = React.createClass({
 
   newMessage: function(text, user) {
     var timestamp = new Date().toLocaleString(),
-      msg = <ChatMessage message={text} date={timestamp} name={user.name} avatar={user.avatar} />;
+      msg = <ChatMessage key={this.state.messages.length} message={text} date={timestamp} name={user.name} avatar={user.avatar} />;
     this.setState({
       messages: this.state.messages.concat([msg])
     });
   },
 
+  speechRecognition: function() {
+    var self = this,
+      recognizer = new Speech({});
+
+    recognizer
+        .on('start', function () {
+            console.log('started')
+        })
+        .on('end', function () {
+            console.log('ended')
+        })
+        .on('error', function (event) {
+            console.log(event.error)
+        })
+        .on('interimResult', function (msg) {
+            console.log('interimResult', msg);
+            document.getElementById("chatInput").value = msg;
+        })
+        .on('finalResult', function (msg) {
+            var submitEvent = new Event('submit');
+            document.getElementById("chatInput").value = msg;
+            document.getElementById("voiceControl").checked = false;
+            self.setState({
+              text: msg,
+              voiceControl: false
+            });
+            window.setTimeout(function() {
+              document.getElementById("chatForm").dispatchEvent(submitEvent);
+            }, 500);
+        });
+
+      return recognizer;
+  },
+
   submit: function(ev) {
     var self = this,
       xhr = createCORSRequest('POST', 'http://uxwiki.monster.com:3978/api/message', this.state.text);
+      //xhr = createCORSRequest('GET', './example.json', this.state.text);
 
     ev.preventDefault();
     this.newMessage(this.state.text, {
@@ -97,32 +133,39 @@ var Chat = React.createClass({
     xhr.onreadystatechange = function () {
       var response;
       if (xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 400) {
-        response = JSON.parse(xhr.responseText);
-        console.log('json response', response);
-        self.newMessage(response.message, {
-          name: 'Job Bot',
-          avatar: 'bot.jpg'
-        });
-        self.setState({
-          //iframeUrl: msgObj.url || self.state.iframeUrl
-        });
-        if (self.state.voiceControl) {
-          talk(response.message, 'Google UK English Male');
-        }
+        window.setTimeout(function() {
+          response = JSON.parse(xhr.responseText);
+          self.newMessage(response.text, {
+            name: 'Job Bot',
+            avatar: 'bot.jpg'
+          });
+          self.setState({
+            //iframeUrl: msgObj.url || self.state.iframeUrl
+          });
+          talk(response.text, 'Google UK English Male');
+        }, 500);
       }
-  };
+    };
     botRequestJSON.text = this.state.text;
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.send(JSON.stringify(botRequestJSON));
+    document.getElementById("chatInput").value = '';
   },
 
   updateInput: function(ev) {
+    console.log('updateInput', ev.target.value);
     this.setState({
       text: ev.target.value
     });
   },
 
   toggleVoiceControl: function(ev) {
+    if (ev.target.checked) {
+      this.recognizer = this.speechRecognition();
+      this.recognizer.start();
+    } else {
+      this.recognizer.stop();
+    }
     this.setState({
       voiceControl: ev.target.checked
     });
@@ -131,23 +174,25 @@ var Chat = React.createClass({
   render: function() {
     return <div className="pageWrapper">
       <iframe src={this.state.iframeUrl}></iframe>
+      <input id="monster" type="checkbox" className="hidden" />
+      <label htmlFor="monster" className="monster"><span className="sr-only">Show chat</span></label>
       <div className="chat">
         <div className="panel panel-info">
-          <div className="panel-heading">Recent chat history</div>
+        <div className="panel-heading">Recent chat history</div>
           <div className="panel-body">
             <ul className="media-list">{this.state.messages}</ul>
           </div>
           <div className="panel-footer">
-              <form onSubmit={this.submit}>
-                  <div className="input-group">
-                    <input onChange={this.updateInput} type="text" className="form-control" placeholder="Your Message" />
-                    <span className="input-group-btn">
-                        <button className="btn btn-info" type="submit">Send</button>
-                    </span>
-                  </div>
-                  <input id="voiceControl" onChange={this.toggleVoiceControl} type="checkbox" className="hidden" />
-                  <label htmlFor="voiceControl" className="microphone"><span className="sr-only">Use voice control</span></label>
-              </form>
+            <form id="chatForm" onSubmit={this.submit}>
+              <div className="input-group">
+                <input id="chatInput" onChange={this.updateInput} type="text" className="form-control" placeholder="Your Message" />
+                <span className="input-group-btn">
+                  <button className="btn btn-info" type="submit">Send</button>
+                </span>
+              </div>
+              <input id="voiceControl" onChange={this.toggleVoiceControl} type="checkbox" className="hidden" />
+              <label htmlFor="voiceControl" className="microphone"><span className="sr-only">Use voice control</span></label>
+            </form>
           </div>
         </div>
       </div>

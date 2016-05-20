@@ -18,6 +18,7 @@ body {
   position: absolute;
   bottom: 0;
   right: 30px;
+  display: none;
 }
 .panel-body {
   max-height: 600px;
@@ -36,9 +37,35 @@ body {
 iframe {
   overflow-x: hidden;
   overflow-y: auto;
+  border: 0;
 }
 
-#voiceControl + .microphone {
+.monster {
+  width: 216px;
+  height: 100px;
+  background: url(../images/monster.png);
+  position: absolute;
+  bottom: -50px;
+  right: 40px;
+  z-index: 2;
+  margin: 0;
+  transition: bottom 0.3s;
+  cursor: pointer;
+}
+
+.monster:hover {
+  bottom: 0;
+}
+
+#monster:checked + .monster {
+  display: none;
+}
+
+#monster:checked ~ .chat {
+  display: block;
+}
+
+.microphone {
   background: url(../icons/microphone-off.svg);
   cursor: pointer;
   width: 24px;
@@ -50,6 +77,6 @@ iframe {
   z-index: 2;
 }
 
-#voiceControl:checked + label {
+#voiceControl:checked + .microphone {
   background: url(../icons/microphone.svg);
 }
